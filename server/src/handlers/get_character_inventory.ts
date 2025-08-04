@@ -1,9 +1,19 @@
 
+import { db } from '../db';
+import { inventoryTable } from '../db/schema';
+import { eq } from 'drizzle-orm';
 import { type Inventory } from '../schema';
 
-export async function getCharacterInventory(characterId: number): Promise<Inventory[]> {
-  // This is a placeholder declaration! Real code should be implemented here.
-  // The goal of this handler is fetching all inventory items for a character
-  // including equipped and unequipped items with their quantities.
-  return Promise.resolve([]);
-}
+export const getCharacterInventory = async (characterId: number): Promise<Inventory[]> => {
+  try {
+    const results = await db.select()
+      .from(inventoryTable)
+      .where(eq(inventoryTable.character_id, characterId))
+      .execute();
+
+    return results;
+  } catch (error) {
+    console.error('Failed to get character inventory:', error);
+    throw error;
+  }
+};

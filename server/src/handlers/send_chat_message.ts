@@ -1,15 +1,34 @@
 
+import { db } from '../db';
+import { chatMessagesTable, usersTable } from '../db/schema';
 import { type SendChatMessageInput, type ChatMessage } from '../schema';
+import { eq } from 'drizzle-orm';
 
 export async function sendChatMessage(input: SendChatMessageInput): Promise<ChatMessage> {
-  // This is a placeholder declaration! Real code should be implemented here.
-  // The goal of this handler is creating a new global chat message
-  // and persisting it in the database with timestamp.
-  return Promise.resolve({
-    id: 0,
-    user_id: input.user_id,
-    username: 'placeholder_username',
-    message: input.message,
-    created_at: new Date()
-  } as ChatMessage);
+  try {
+    // First, get the username for the user_id
+    const user = await db.select()
+      .from(usersTable)
+      .where(eq(usersTable.id, input.user_id))
+      .execute();
+
+    if (user.length === 0) {
+      throw new Error(`User with id ${input.user_id} not found`);
+    }
+
+    // Insert the chat message with the username
+    const result = await db.insert(chatMessagesTable)
+      .values({
+        user_id: input.user_id,
+        username: user[0].username,
+        message: input.message
+      })
+      .returning()
+      .execute();
+
+    return result[0];
+  } catch (error) {
+    console.error('Chat message creation failed:', error);
+    throw error;
+  }
 }

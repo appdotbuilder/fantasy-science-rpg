@@ -1,9 +1,21 @@
 
+import { db } from '../db';
+import { itemsTable } from '../db/schema';
 import { type Item } from '../schema';
 
-export async function getItems(): Promise<Item[]> {
-  // This is a placeholder declaration! Real code should be implemented here.
-  // The goal of this handler is fetching all available items in the game
-  // including weapons, armor, materials, potions, etc.
-  return Promise.resolve([]);
-}
+export const getItems = async (): Promise<Item[]> => {
+  try {
+    const results = await db.select()
+      .from(itemsTable)
+      .execute();
+
+    // Convert numeric fields back to numbers
+    return results.map(item => ({
+      ...item,
+      market_value: parseFloat(item.market_value)
+    }));
+  } catch (error) {
+    console.error('Failed to fetch items:', error);
+    throw error;
+  }
+};
